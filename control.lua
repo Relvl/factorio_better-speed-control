@@ -1,36 +1,12 @@
 require "util"
 
-function ui()
-    for playerIndex, player in pairs(game.players) do
-        if player.gui.top["btc-set-normal"] == nil then
-            player.gui.top.add { name = "btc-set-normal", type = "button", caption = "x1", style = "sc_btc_button" }
-        end
-
-        if player.gui.top["btc-decrease"] == nil then
-            player.gui.top.add { name = "btc-decrease", type = "button", caption = "-x1", style = "sc_btc_button" }
-        end
-
-        if player.gui.top["btc--display"] == nil then
-            player.gui.top.add { name = "btc--display", type = "label", caption = "Speed " .. tostring(format_num(game.speed, 0, "x", "")), style = "btc_label" }
-        end
-
-        if player.gui.top["btc-increase"] == nil then
-            player.gui.top.add { name = "btc-increase", type = "button", caption = "+x1", style = "sc_btc_button" }
-        end
-
-        if player.gui.top["btc-set-maximum"] == nil then
-            player.gui.top.add { name = "btc-set-maximum", type = "button", caption = "x10", style = "sc_btc_button" }
-        end
-    end
-end
-
 script.on_configuration_changed(function(_)
-    ui()
+    createHud()
 end)
 
 script.on_event(defines.events, function(event)
     if event.name == defines.events.on_player_joined_game then
-        ui()
+        createHud()
     end
 
     -- on_gui_click
@@ -50,65 +26,39 @@ script.on_event(defines.events, function(event)
     end
 end)
 
+function createHud()
+    for playerIndex, player in pairs(game.players) do
+        local gui = player.gui.top
+
+        if gui["btc-set-normal"] == nil then
+            gui.add { name = "btc-set-normal", type = "button", caption = "x1", style = "sc_btc_button", tooltip = { "better-speed-control.btc-set-normal-tooltip" } }
+        end
+
+        if gui["btc-decrease"] == nil then
+            gui.add { name = "btc-decrease", type = "button", caption = "-x1", style = "sc_btc_button", tooltip = { "better-speed-control.btc-decrease-tooltip" } }
+        end
+
+        if gui["btc--display"] == nil then
+            gui.add { name = "btc--display", type = "label", caption = getSpeedString(), style = "btc_label", tooltip = { "better-speed-control.btc--display-tooltip" } }
+        end
+
+        if gui["btc-increase"] == nil then
+            gui.add { name = "btc-increase", type = "button", caption = "+x1", style = "sc_btc_button", tooltip = { "better-speed-control.btc-increase-tooltip" } }
+        end
+
+        if gui["btc-set-maximum"] == nil then
+            gui.add { name = "btc-set-maximum", type = "button", caption = "x10", style = "sc_btc_button", tooltip = { "better-speed-control.btc-set-maximum-tooltip" } }
+        end
+    end
+end
+
 function setSpeed(speed)
     game.speed = math.clamp(speed, 0.5, 10)
-
     for playerIndex, player in pairs(game.players) do
         if player.gui.top["btc--display"] then
-            player.gui.top["btc--display"].caption = "Speed " .. tostring(format_num(game.speed, 0, "x", ""))
+            player.gui.top["btc--display"].caption = getSpeedString()
         end
     end
-end
-
-function format_num(amount, decimal, prefix, neg_prefix)
-    local str_amount, formatted, famount, remain
-
-    decimal = decimal or 2
-    neg_prefix = neg_prefix or "-"
-
-    famount = math.abs(round(amount, decimal))
-    famount = math.floor(famount)
-
-    remain = round(math.abs(amount) - famount, decimal)
-
-    formatted = comma_value(famount)
-
-    if (decimal > 0) then
-        remain = string.sub(tostring(remain), 3)
-        formatted = formatted .. "." .. remain ..
-                string.rep("0", decimal - string.len(remain))
-    end
-
-    formatted = (prefix or "") .. formatted
-
-    if (amount < 0) then
-        if (neg_prefix == "()") then
-            formatted = "(" .. formatted .. ")"
-        else
-            formatted = neg_prefix .. formatted
-        end
-    end
-
-    return formatted
-end
-
-function round(val, decimal)
-    if (decimal) then
-        return math.floor((val * 10 ^ decimal) + 0.5) / (10 ^ decimal)
-    else
-        return math.floor(val + 0.5)
-    end
-end
-
-function comma_value(amount)
-    local formatted = amount
-    while true do
-        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-        if (k == 0) then
-            break
-        end
-    end
-    return formatted
 end
 
 function math.clamp(val, lower, upper)
@@ -117,6 +67,15 @@ function math.clamp(val, lower, upper)
     end
 
     return math.max(lower, math.min(upper, val))
+end
+
+function getSpeedString()
+    -- actually only one value is fractional - it is 0.5
+    if game.speed < 1 then
+        return string.format("x%.1f", game.speed)
+    else
+        return string.format("x%d", game.speed)
+    end
 end
 
 script.on_event("btc-decrease", function(event)

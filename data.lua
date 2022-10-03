@@ -4,7 +4,7 @@ data:extend(
                 type = "font",
                 name = "btc_font",
                 from = "default-bold",
-                size = 16
+                size = 16,
             }
         }
 )
@@ -26,8 +26,8 @@ data.raw["gui-style"].default["sc_btc_button"] = {
     bottom_padding = 0,
     left_padding = 0,
 
-    maximal_width = 35,
-    minimal_width = 35,
+    minimal_width = 32,
+    maximal_width = 32,
 
     left_click_sound = {
         {
